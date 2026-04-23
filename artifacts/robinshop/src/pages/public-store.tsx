@@ -2,14 +2,15 @@ import { useEffect } from "react";
 import { useParams, Link } from "wouter";
 import { useGetPublicStore, getGetPublicStoreQueryKey, useTrackStoreVisit } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
-import { ShoppingBag, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
+import { StoreHeader } from "@/components/store-header";
 
 export default function PublicStoreHomePage() {
   const { slug } = useParams<{ slug: string }>();
-  
+
   const { data: payload, isLoading } = useGetPublicStore(slug!, {
-    query: { enabled: !!slug, queryKey: getGetPublicStoreQueryKey(slug!) }
+    query: { enabled: !!slug, queryKey: getGetPublicStoreQueryKey(slug!) },
   });
 
   const trackVisit = useTrackStoreVisit();
@@ -28,34 +29,14 @@ export default function PublicStoreHomePage() {
   const featuredProducts = products.slice(0, 3);
 
   return (
-    <div 
+    <div
       className="min-h-screen font-sans"
       style={{
         '--store-primary': store.primaryColor || '#000',
         '--store-accent': store.accentColor || '#333',
       } as React.CSSProperties}
     >
-      {/* Dynamic Background */}
-      <div 
-        className="absolute inset-0 -z-10 opacity-[0.03]" 
-        style={{ backgroundColor: 'var(--store-primary)' }}
-      />
-
-      <header className="container mx-auto px-4 h-20 flex items-center justify-between">
-        <Link href={`/s/${store.slug}`} className="flex items-center gap-2 font-bold text-xl tracking-tight">
-          <div 
-            className="w-8 h-8 rounded flex items-center justify-center text-white"
-            style={{ backgroundColor: 'var(--store-primary)' }}
-          >
-            <ShoppingBag size={18} />
-          </div>
-          {store.name}
-        </Link>
-        <nav className="flex items-center gap-6 text-sm font-medium">
-          <Link href={`/s/${store.slug}`}>Home</Link>
-          <Link href={`/s/${store.slug}/products`} className="text-muted-foreground hover:text-foreground">Shop</Link>
-        </nav>
-      </header>
+      <StoreHeader slug={store.slug} storeName={store.name} />
 
       <main>
         <section className="py-24 md:py-32 px-4 relative overflow-hidden">
@@ -65,27 +46,27 @@ export default function PublicStoreHomePage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
             >
-              <div 
+              <div
                 className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium mb-8"
-                style={{ 
+                style={{
                   backgroundColor: 'color-mix(in srgb, var(--store-primary) 15%, transparent)',
-                  color: 'var(--store-primary)' 
+                  color: 'var(--store-primary)',
                 }}
               >
                 {store.themeName}
               </div>
-              
+
               <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-6 leading-[1.1]">
                 {store.homepageHeadline}
               </h1>
-              
+
               <p className="text-xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed">
                 {store.homepageBody}
               </p>
 
               <Link href={`/s/${store.slug}/products`}>
-                <Button 
-                  size="lg" 
+                <Button
+                  size="lg"
                   className="h-14 px-8 text-white text-base shadow-lg"
                   style={{ backgroundColor: 'var(--store-primary)' }}
                 >
@@ -118,8 +99,8 @@ export default function PublicStoreHomePage() {
                   <Link href={`/s/${store.slug}/products/${product.id}`} className="group block">
                     <div className="bg-background rounded-2xl overflow-hidden border shadow-sm hover:shadow-md transition-all">
                       <div className="aspect-square bg-muted relative overflow-hidden">
-                        <img 
-                          src={product.imageUrl} 
+                        <img
+                          src={product.imageUrl}
                           alt={product.name}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
@@ -130,7 +111,7 @@ export default function PublicStoreHomePage() {
                           {product.description}
                         </p>
                         <div className="font-bold text-lg" style={{ color: 'var(--store-primary)' }}>
-                          ${(product.price / 100).toFixed(2)}
+                          ${product.price.toFixed(2)}
                         </div>
                       </div>
                     </div>

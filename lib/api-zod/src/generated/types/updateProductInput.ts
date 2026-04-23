@@ -12,5 +12,6 @@ export interface UpdateProductInput {
   description?: string;
   price?: number;
   imageUrl?: string;
+  category?: string;
   source?: ProductSource;
 }

@@ -17,6 +17,8 @@ import AdminProductPage from "@/pages/admin-product";
 import PublicStoreHomePage from "@/pages/public-store";
 import PublicStoreProductsPage from "@/pages/public-products";
 import PublicProductPage from "@/pages/public-product";
+import PublicCartPage from "@/pages/public-cart";
+import PublicCheckoutPage from "@/pages/public-checkout";
 import NotFound from "@/pages/not-found";
 
 const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
@@ -143,6 +145,8 @@ function Router() {
       <Route path="/s/:slug" component={PublicStoreHomePage} />
       <Route path="/s/:slug/products" component={PublicStoreProductsPage} />
       <Route path="/s/:slug/products/:productId" component={PublicProductPage} />
+      <Route path="/s/:slug/cart" component={PublicCartPage} />
+      <Route path="/s/:slug/checkout" component={PublicCheckoutPage} />
       <Route component={NotFound} />
     </Switch>
   );

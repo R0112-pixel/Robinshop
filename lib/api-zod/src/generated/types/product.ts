@@ -14,6 +14,9 @@ export interface Product {
   price: number;
   imageUrl: string;
   source: string;
+  category: string;
+  conversionScore: number;
   views: number;
+  clicks: number;
   createdAt: Date;
 }

@@ -11,9 +11,11 @@ import {
   UpdateProductBody,
   DeleteProductParams,
   TrackProductViewParams,
+  TrackProductClickParams,
+  ImproveProductParams,
 } from "@workspace/api-zod";
 import { requireAuth, type AuthedRequest } from "../lib/auth";
-import { generateProductsOnly, type LanguageCode } from "../lib/ai";
+import { generateProductsOnly, improveProductCopy, type LanguageCode } from "../lib/ai";
 import { aiRateLimit } from "../middlewares/rateLimit";
 import { serializeProduct, productImageUrl } from "../lib/serialize";
 
@@ -74,6 +76,7 @@ router.post("/stores/:id/products", requireAuth, async (req, res) => {
           ? body.imageUrl
           : productImageUrl(`${store.slug}-${body.name}`, Date.now() % 1000),
       source: body.source ?? "manual",
+      category: body.category ?? "",
     })
     .returning();
 
@@ -164,6 +167,7 @@ router.patch("/products/:productId", requireAuth, async (req, res) => {
       ...(body.price !== undefined && { price: body.price.toFixed(2) }),
       ...(body.imageUrl !== undefined && { imageUrl: body.imageUrl }),
       ...(body.source !== undefined && { source: body.source }),
+      ...(body.category !== undefined && { category: body.category }),
     })
     .where(eq(productsTable.id, productId))
     .returning();
@@ -182,6 +186,63 @@ router.delete("/products/:productId", requireAuth, async (req, res) => {
   }
   await db.delete(productsTable).where(eq(productsTable.id, productId));
   res.status(204).send();
+});
+
+router.post("/products/:productId/improve", requireAuth, aiRateLimit, async (req, res) => {
+  const userId = (req as AuthedRequest).userId;
+  const { productId } = ImproveProductParams.parse(req.params);
+
+  const product = await ownProduct(userId, productId);
+  if (!product) {
+    res.status(404).json({ error: "Not found" });
+    return;
+  }
+
+  const [store] = await db
+    .select()
+    .from(storesTable)
+    .where(eq(storesTable.id, product.storeId))
+    .limit(1);
+  if (!store) {
+    res.status(404).json({ error: "Not found" });
+    return;
+  }
+
+  const improved = await improveProductCopy(
+    {
+      name: product.name,
+      description: product.description,
+      price: Number(product.price),
+      category: product.category,
+    },
+    { name: store.name, niche: store.niche },
+    store.language as LanguageCode,
+  );
+
+  const [updated] = await db
+    .update(productsTable)
+    .set({
+      description: improved.description,
+      conversionScore: improved.conversionScore,
+    })
+    .where(eq(productsTable.id, productId))
+    .returning();
+
+  res.json(serializeProduct(updated));
+});
+
+router.post("/products/:productId/click", async (req, res) => {
+  const { productId } = TrackProductClickParams.parse(req.params);
+  const [updated] = await db
+    .update(productsTable)
+    .set({ clicks: sql`${productsTable.clicks} + 1` })
+    .where(eq(productsTable.id, productId))
+    .returning();
+  if (!updated) {
+    res.status(404).json({ error: "Not found" });
+    return;
+  }
+  res.json({ count: updated.clicks });
 });
 
 router.post("/products/:productId/view", async (req, res) => {

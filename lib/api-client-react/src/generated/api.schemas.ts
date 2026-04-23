@@ -86,7 +86,10 @@ export interface Product {
   price: number;
   imageUrl: string;
   source: string;
+  category: string;
+  conversionScore: number;
   views: number;
+  clicks: number;
   createdAt: string;
 }
 
@@ -96,6 +99,7 @@ export interface CreateProductInput {
   description: string;
   price: number;
   imageUrl?: string;
+  category?: string;
   source?: ProductSource;
 }
 
@@ -104,6 +108,7 @@ export interface UpdateProductInput {
   description?: string;
   price?: number;
   imageUrl?: string;
+  category?: string;
   source?: ProductSource;
 }
 

@@ -248,6 +248,41 @@ paths:
         "204":
           description: Deleted
 
+  /products/{productId}/improve:
+    post:
+      operationId: improveProduct
+      tags: [products]
+      summary: Use AI to rewrite the description and compute a conversion-potential score
+      parameters:
+        - in: path
+          name: productId
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+
+  /products/{productId}/click:
+    post:
+      operationId: trackProductClick
+      tags: [analytics]
+      parameters:
+        - in: path
+          name: productId
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CounterResponse"
+
   /products/{productId}/view:
     post:
       operationId: trackProductView
@@ -305,6 +340,23 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/MarketingAsset"
+
+  /stores/{id}/marketing/pack:
+    get:
+      operationId: getMarketingPack
+      tags: [marketing]
+      summary: Download a single bundled marketing pack (markdown) of all assets for a store
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            text/markdown:
+              schema: { type: string }
 
   /marketing/{assetId}:
     delete:
@@ -435,9 +487,12 @@ components:
         price: { type: number }
         imageUrl: { type: string }
         source: { type: string }
+        category: { type: string }
+        conversionScore: { type: integer }
         views: { type: integer }
+        clicks: { type: integer }
         createdAt: { type: string, format: date-time }
-      required: [id, storeId, name, description, price, imageUrl, source, views, createdAt]
+      required: [id, storeId, name, description, price, imageUrl, source, category, conversionScore, views, clicks, createdAt]
 
     CreateProductInput:
       type: object
@@ -446,6 +501,7 @@ components:
         description: { type: string }
         price: { type: number }
         imageUrl: { type: string }
+        category: { type: string }
         source:
           $ref: "#/components/schemas/ProductSource"
       required: [name, description, price]
@@ -457,6 +513,7 @@ components:
         description: { type: string }
         price: { type: number }
         imageUrl: { type: string }
+        category: { type: string }
         source:
           $ref: "#/components/schemas/ProductSource"
 

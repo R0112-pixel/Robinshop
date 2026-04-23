@@ -85,7 +85,10 @@ export const GetDashboardSummaryResponse = zod.object({
       price: zod.number(),
       imageUrl: zod.string(),
       source: zod.string(),
+      category: zod.string(),
+      conversionScore: zod.number(),
       views: zod.number(),
+      clicks: zod.number(),
       createdAt: zod.coerce.date(),
     }),
   ),
@@ -175,7 +178,10 @@ export const ListStoreProductsResponseItem = zod.object({
   price: zod.number(),
   imageUrl: zod.string(),
   source: zod.string(),
+  category: zod.string(),
+  conversionScore: zod.number(),
   views: zod.number(),
+  clicks: zod.number(),
   createdAt: zod.coerce.date(),
 });
 export const ListStoreProductsResponse = zod.array(
@@ -194,6 +200,7 @@ export const CreateProductBody = zod.object({
   description: zod.string(),
   price: zod.number(),
   imageUrl: zod.string().optional(),
+  category: zod.string().optional(),
   source: zod.enum(["ai", "manual", "dropship"]).optional(),
 });
 
@@ -212,7 +219,10 @@ export const RegenerateStoreProductsResponseItem = zod.object({
   price: zod.number(),
   imageUrl: zod.string(),
   source: zod.string(),
+  category: zod.string(),
+  conversionScore: zod.number(),
   views: zod.number(),
+  clicks: zod.number(),
   createdAt: zod.coerce.date(),
 });
 export const RegenerateStoreProductsResponse = zod.array(
@@ -231,7 +241,10 @@ export const GetProductResponse = zod.object({
   price: zod.number(),
   imageUrl: zod.string(),
   source: zod.string(),
+  category: zod.string(),
+  conversionScore: zod.number(),
   views: zod.number(),
+  clicks: zod.number(),
   createdAt: zod.coerce.date(),
 });
 
@@ -244,6 +257,7 @@ export const UpdateProductBody = zod.object({
   description: zod.string().optional(),
   price: zod.number().optional(),
   imageUrl: zod.string().optional(),
+  category: zod.string().optional(),
   source: zod.enum(["ai", "manual", "dropship"]).optional(),
 });
 
@@ -255,12 +269,45 @@ export const UpdateProductResponse = zod.object({
   price: zod.number(),
   imageUrl: zod.string(),
   source: zod.string(),
+  category: zod.string(),
+  conversionScore: zod.number(),
   views: zod.number(),
+  clicks: zod.number(),
   createdAt: zod.coerce.date(),
 });
 
 export const DeleteProductParams = zod.object({
   productId: zod.coerce.string(),
+});
+
+/**
+ * @summary Use AI to rewrite the description and compute a conversion-potential score
+ */
+export const ImproveProductParams = zod.object({
+  productId: zod.coerce.string(),
+});
+
+export const ImproveProductResponse = zod.object({
+  id: zod.string(),
+  storeId: zod.string(),
+  name: zod.string(),
+  description: zod.string(),
+  price: zod.number(),
+  imageUrl: zod.string(),
+  source: zod.string(),
+  category: zod.string(),
+  conversionScore: zod.number(),
+  views: zod.number(),
+  clicks: zod.number(),
+  createdAt: zod.coerce.date(),
+});
+
+export const TrackProductClickParams = zod.object({
+  productId: zod.coerce.string(),
+});
+
+export const TrackProductClickResponse = zod.object({
+  count: zod.number(),
 });
 
 export const TrackProductViewParams = zod.object({
@@ -297,6 +344,13 @@ export const GenerateMarketingAssetParams = zod.object({
 
 export const GenerateMarketingAssetBody = zod.object({
   type: zod.enum(["tiktok", "instagram", "email", "seo"]),
+});
+
+/**
+ * @summary Download a single bundled marketing pack (markdown) of all assets for a store
+ */
+export const GetMarketingPackParams = zod.object({
+  id: zod.coerce.string(),
 });
 
 export const DeleteMarketingAssetParams = zod.object({
@@ -361,7 +415,10 @@ export const GetPublicStoreResponse = zod.object({
       price: zod.number(),
       imageUrl: zod.string(),
       source: zod.string(),
+      category: zod.string(),
+      conversionScore: zod.number(),
       views: zod.number(),
+      clicks: zod.number(),
       createdAt: zod.coerce.date(),
     }),
   ),

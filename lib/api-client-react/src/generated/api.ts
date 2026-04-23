@@ -1156,6 +1156,168 @@ export const useDeleteProduct = <
   return useMutation(getDeleteProductMutationOptions(options));
 };
 
+/**
+ * @summary Use AI to rewrite the description and compute a conversion-potential score
+ */
+export const getImproveProductUrl = (productId: string) => {
+  return `/api/products/${productId}/improve`;
+};
+
+export const improveProduct = async (
+  productId: string,
+  options?: RequestInit,
+): Promise<Product> => {
+  return customFetch<Product>(getImproveProductUrl(productId), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getImproveProductMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof improveProduct>>,
+    TError,
+    { productId: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof improveProduct>>,
+  TError,
+  { productId: string },
+  TContext
+> => {
+  const mutationKey = ["improveProduct"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof improveProduct>>,
+    { productId: string }
+  > = (props) => {
+    const { productId } = props ?? {};
+
+    return improveProduct(productId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ImproveProductMutationResult = NonNullable<
+  Awaited<ReturnType<typeof improveProduct>>
+>;
+
+export type ImproveProductMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Use AI to rewrite the description and compute a conversion-potential score
+ */
+export const useImproveProduct = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof improveProduct>>,
+    TError,
+    { productId: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof improveProduct>>,
+  TError,
+  { productId: string },
+  TContext
+> => {
+  return useMutation(getImproveProductMutationOptions(options));
+};
+
+export const getTrackProductClickUrl = (productId: string) => {
+  return `/api/products/${productId}/click`;
+};
+
+export const trackProductClick = async (
+  productId: string,
+  options?: RequestInit,
+): Promise<CounterResponse> => {
+  return customFetch<CounterResponse>(getTrackProductClickUrl(productId), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getTrackProductClickMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof trackProductClick>>,
+    TError,
+    { productId: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof trackProductClick>>,
+  TError,
+  { productId: string },
+  TContext
+> => {
+  const mutationKey = ["trackProductClick"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof trackProductClick>>,
+    { productId: string }
+  > = (props) => {
+    const { productId } = props ?? {};
+
+    return trackProductClick(productId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type TrackProductClickMutationResult = NonNullable<
+  Awaited<ReturnType<typeof trackProductClick>>
+>;
+
+export type TrackProductClickMutationError = ErrorType<unknown>;
+
+export const useTrackProductClick = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof trackProductClick>>,
+    TError,
+    { productId: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof trackProductClick>>,
+  TError,
+  { productId: string },
+  TContext
+> => {
+  return useMutation(getTrackProductClickMutationOptions(options));
+};
+
 export const getTrackProductViewUrl = (productId: string) => {
   return `/api/products/${productId}/view`;
 };
@@ -1401,6 +1563,93 @@ export const useGenerateMarketingAsset = <
 > => {
   return useMutation(getGenerateMarketingAssetMutationOptions(options));
 };
+
+/**
+ * @summary Download a single bundled marketing pack (markdown) of all assets for a store
+ */
+export const getGetMarketingPackUrl = (id: string) => {
+  return `/api/stores/${id}/marketing/pack`;
+};
+
+export const getMarketingPack = async (
+  id: string,
+  options?: RequestInit,
+): Promise<string> => {
+  return customFetch<string>(getGetMarketingPackUrl(id), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetMarketingPackQueryKey = (id: string) => {
+  return [`/api/stores/${id}/marketing/pack`] as const;
+};
+
+export const getGetMarketingPackQueryOptions = <
+  TData = Awaited<ReturnType<typeof getMarketingPack>>,
+  TError = ErrorType<unknown>,
+>(
+  id: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getMarketingPack>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetMarketingPackQueryKey(id);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getMarketingPack>>
+  > = ({ signal }) => getMarketingPack(id, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getMarketingPack>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetMarketingPackQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getMarketingPack>>
+>;
+export type GetMarketingPackQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Download a single bundled marketing pack (markdown) of all assets for a store
+ */
+
+export function useGetMarketingPack<
+  TData = Awaited<ReturnType<typeof getMarketingPack>>,
+  TError = ErrorType<unknown>,
+>(
+  id: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getMarketingPack>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetMarketingPackQueryOptions(id, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
 
 export const getDeleteMarketingAssetUrl = (assetId: string) => {
   return `/api/marketing/${assetId}`;

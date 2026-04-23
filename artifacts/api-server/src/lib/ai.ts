@@ -231,6 +231,82 @@ Write all output in ${langName}. Return STRICT JSON: { "title": "short label", "
   }
 }
 
+// Quality / improvement engine ----------------------------------------------
+
+export interface ImprovedProduct {
+  description: string;
+  conversionScore: number;
+}
+
+function fallbackImproveProduct(
+  name: string,
+  description: string,
+): ImprovedProduct {
+  const len = description.trim().length;
+  const hasNumbers = /\d/.test(description);
+  const hasCTA = /\b(buy|shop|order|get|grab|today|now)\b/i.test(description);
+  let score = 40;
+  if (len > 80) score += 15;
+  if (len > 160) score += 10;
+  if (hasNumbers) score += 10;
+  if (hasCTA) score += 15;
+  score = Math.max(20, Math.min(95, score + Math.floor(Math.random() * 10)));
+  const punchier =
+    description.length > 0
+      ? `${description} Designed to be your new favorite — get yours today.`
+      : `${name} — crafted for everyday excellence. Order yours today.`;
+  return { description: punchier, conversionScore: score };
+}
+
+export async function improveProductCopy(
+  product: { name: string; description: string; price: number; category: string },
+  storeContext: { name: string; niche: string },
+  language: LanguageCode = "en",
+): Promise<ImprovedProduct> {
+  if (!openai) return fallbackImproveProduct(product.name, product.description);
+
+  const langName = LANGUAGE_NAME[language];
+  const prompt = `You are a senior e-commerce conversion copywriter.
+
+Brand: ${storeContext.name} (niche: ${storeContext.niche})
+Product: ${product.name}
+Category: ${product.category || "general"}
+Current description: ${product.description}
+Price: $${product.price.toFixed(2)}
+Output language: ${langName}
+
+Rewrite the description to maximize conversion: lead with the customer benefit, include a specific feature, social proof or sensory detail, and end with a soft CTA. Keep it 2-3 short sentences.
+
+Then score the REWRITTEN description's conversion potential 0-100 (consider clarity, specificity, emotional appeal, and CTA strength).
+
+Return STRICT JSON: { "description": "...", "conversionScore": 87 }`;
+
+  try {
+    const completion = await openai.chat.completions.create({
+      model: "gpt-5.4",
+      max_completion_tokens: 600,
+      response_format: { type: "json_object" },
+      messages: [
+        { role: "system", content: "You output strict JSON. No markdown." },
+        { role: "user", content: prompt },
+      ],
+    });
+    const raw = completion.choices[0]?.message?.content ?? "";
+    const parsed = JSON.parse(raw) as Partial<ImprovedProduct>;
+    if (!parsed.description) throw new Error("empty");
+    return {
+      description: String(parsed.description),
+      conversionScore: Math.max(
+        0,
+        Math.min(100, Number(parsed.conversionScore ?? 70) || 70),
+      ),
+    };
+  } catch (err) {
+    logger.warn({ err }, "improve product AI failed, using fallback");
+    return fallbackImproveProduct(product.name, product.description);
+  }
+}
+
 // Dropshipping suggestions ---------------------------------------------------
 
 export interface DropshipSuggestion {

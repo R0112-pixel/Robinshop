@@ -11,7 +11,10 @@ export const productsTable = pgTable("products", {
   price: numeric("price", { precision: 10, scale: 2 }).notNull(),
   imageUrl: text("image_url").notNull().default(""),
   source: text("source").notNull().default("ai"),
+  category: text("category").notNull().default(""),
+  conversionScore: integer("conversion_score").notNull().default(0),
   views: integer("views").notNull().default(0),
+  clicks: integer("clicks").notNull().default(0),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

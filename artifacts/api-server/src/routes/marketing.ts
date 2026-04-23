@@ -6,6 +6,7 @@ import {
   GenerateMarketingAssetParams,
   GenerateMarketingAssetBody,
   DeleteMarketingAssetParams,
+  GetMarketingPackParams,
 } from "@workspace/api-zod";
 import { requireAuth, type AuthedRequest } from "../lib/auth";
 import {
@@ -82,6 +83,52 @@ router.post(
     res.status(201).json(serializeMarketingAsset(inserted));
   },
 );
+
+router.get("/stores/:id/marketing/pack", requireAuth, async (req, res) => {
+  const userId = (req as AuthedRequest).userId;
+  const { id } = GetMarketingPackParams.parse(req.params);
+  const [store] = await db
+    .select()
+    .from(storesTable)
+    .where(and(eq(storesTable.id, id), eq(storesTable.userId, userId)))
+    .limit(1);
+  if (!store) {
+    res.status(404).json({ error: "Not found" });
+    return;
+  }
+  const assets = await db
+    .select()
+    .from(marketingAssetsTable)
+    .where(eq(marketingAssetsTable.storeId, id))
+    .orderBy(desc(marketingAssetsTable.createdAt));
+
+  const TYPE_LABEL: Record<string, string> = {
+    tiktok: "TikTok Ad Script",
+    instagram: "Instagram Caption",
+    email: "Email Sequence",
+    seo: "SEO Blog Post",
+  };
+
+  const md =
+    `# ${store.name} — Marketing Pack\n\n` +
+    `Niche: ${store.niche}\nTagline: ${store.tagline}\nLanguage: ${store.language}\nGenerated: ${new Date().toISOString()}\n\n---\n\n` +
+    (assets.length === 0
+      ? "_No marketing assets generated yet._\n"
+      : assets
+          .map(
+            (a) =>
+              `## ${TYPE_LABEL[a.type] ?? a.type} — ${a.title}\n\n_${a.language} · ${a.createdAt.toISOString()}_\n\n${a.content}\n`,
+          )
+          .join("\n---\n\n"));
+
+  const safeName = store.slug || "store";
+  res.setHeader("Content-Type", "text/markdown; charset=utf-8");
+  res.setHeader(
+    "Content-Disposition",
+    `attachment; filename="${safeName}-marketing-pack.md"`,
+  );
+  res.send(md);
+});
 
 router.delete("/marketing/:assetId", requireAuth, async (req, res) => {
   const userId = (req as AuthedRequest).userId;

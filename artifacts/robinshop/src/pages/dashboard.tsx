@@ -1,10 +1,10 @@
 import { useGetDashboardSummary, useListStores } from "@workspace/api-client-react";
 import { AdminLayout } from "@/components/layout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "wouter";
-import { Plus, Store as StoreIcon, Package, Eye, Activity } from "lucide-react";
+import { Plus, Store as StoreIcon, Package, Eye, Activity, TrendingUp, MousePointerClick } from "lucide-react";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 
@@ -32,44 +32,95 @@ export default function DashboardPage() {
             ))}
           </div>
         ) : summary ? (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Stores</CardTitle>
-                <StoreIcon className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{summary.totalStores}</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Products</CardTitle>
-                <Package className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{summary.totalProducts}</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Store Visits</CardTitle>
-                <Activity className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{summary.totalVisits}</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Product Views</CardTitle>
-                <Eye className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{summary.totalProductViews}</div>
-              </CardContent>
-            </Card>
-          </div>
+          <>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Stores</CardTitle>
+                  <StoreIcon className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{summary.totalStores}</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Products</CardTitle>
+                  <Package className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{summary.totalProducts}</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Store Visits</CardTitle>
+                  <Activity className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{summary.totalVisits}</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Product Views</CardTitle>
+                  <Eye className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{summary.totalProductViews}</div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {summary.recentProducts.length > 0 && (() => {
+              const top = [...summary.recentProducts]
+                .sort((a, b) => (b.conversionScore - a.conversionScore) || (b.views - a.views))
+                .slice(0, 4);
+              return (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <TrendingUp className="h-4 w-4 text-primary" /> Top-Performing Products
+                    </CardTitle>
+                    <CardDescription>Ranked by AI conversion-potential score and traffic.</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid gap-3 md:grid-cols-2">
+                      {top.map((p) => (
+                        <Link key={p.id} href={`/stores/${p.storeId}/products/${p.id}`}>
+                          <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 cursor-pointer border">
+                            <img src={p.imageUrl} alt={p.name} className="w-12 h-12 rounded object-cover bg-muted" />
+                            <div className="flex-1 min-w-0">
+                              <div className="font-medium truncate">{p.name}</div>
+                              <div className="text-xs text-muted-foreground flex gap-3">
+                                <span className="flex items-center gap-1"><Eye className="h-3 w-3" />{p.views}</span>
+                                <span className="flex items-center gap-1"><MousePointerClick className="h-3 w-3" />{p.clicks}</span>
+                                <span>${p.price.toFixed(2)}</span>
+                              </div>
+                            </div>
+                            {p.conversionScore > 0 && (
+                              <Badge
+                                style={{
+                                  backgroundColor:
+                                    p.conversionScore >= 75
+                                      ? "rgb(22 163 74)"
+                                      : p.conversionScore >= 50
+                                        ? "rgb(202 138 4)"
+                                        : "rgb(220 38 38)",
+                                }}
+                              >
+                                {p.conversionScore}
+                              </Badge>
+                            )}
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })()}
+          </>
         ) : null}
 
         <div className="space-y-4">

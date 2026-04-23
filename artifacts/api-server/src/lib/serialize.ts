@@ -30,7 +30,10 @@ export function serializeProduct(row: ProductRow) {
     price: Number(row.price),
     imageUrl: row.imageUrl,
     source: row.source,
+    category: row.category,
+    conversionScore: row.conversionScore,
     views: row.views,
+    clicks: row.clicks,
     createdAt: row.createdAt.toISOString(),
   };
 }

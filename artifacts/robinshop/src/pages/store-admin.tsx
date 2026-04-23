@@ -18,6 +18,8 @@ import {
   getGetDropshipSuggestionsQueryKey,
   getListStoresQueryKey,
   getGetDashboardSummaryQueryKey,
+  useImproveProduct,
+  getMarketingPack,
 } from "@workspace/api-client-react";
 import { useParams, Link, useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
@@ -52,7 +54,7 @@ import {
 import {
   Eye, ExternalLink, LayoutTemplate, Copy, RefreshCw, Trash2,
   Activity, Package, Plus, Pencil, Sparkles, Globe, ShoppingCart,
-  TrendingUp, Mail, Music2, Hash, FileText,
+  TrendingUp, Mail, Music2, Hash, FileText, Download, MousePointerClick,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
@@ -307,20 +309,40 @@ export default function StoreAdminPage() {
                         <Badge className="absolute top-2 right-2 capitalize" variant={p.source === "ai" ? "default" : p.source === "dropship" ? "secondary" : "outline"}>
                           {p.source}
                         </Badge>
+                        {p.conversionScore > 0 && (
+                          <Badge
+                            className="absolute top-2 left-2 gap-1"
+                            style={{
+                              backgroundColor:
+                                p.conversionScore >= 75
+                                  ? "rgb(22 163 74)"
+                                  : p.conversionScore >= 50
+                                    ? "rgb(202 138 4)"
+                                    : "rgb(220 38 38)",
+                            }}
+                          >
+                            <TrendingUp className="h-3 w-3" /> {p.conversionScore}
+                          </Badge>
+                        )}
                       </div>
                     </Link>
                     <CardContent className="p-4 flex-1 flex flex-col justify-between gap-3">
                       <div>
+                        {p.category && (
+                          <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-0.5">{p.category}</div>
+                        )}
                         <h3 className="font-semibold line-clamp-1 mb-1">{p.name}</h3>
                         <p className="text-sm text-muted-foreground line-clamp-2">{p.description}</p>
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="font-bold">${p.price.toFixed(2)}</span>
-                        <span className="text-xs text-muted-foreground flex items-center gap-1">
-                          <Eye className="h-3 w-3" /> {p.views}
-                        </span>
+                        <div className="flex gap-2 text-xs text-muted-foreground">
+                          <span className="flex items-center gap-1"><Eye className="h-3 w-3" /> {p.views}</span>
+                          <span className="flex items-center gap-1"><MousePointerClick className="h-3 w-3" /> {p.clicks}</span>
+                        </div>
                       </div>
-                      <div className="flex gap-2 pt-2 border-t">
+                      <div className="flex gap-1 pt-2 border-t">
+                        <ImproveProductButton storeId={id!} productId={p.id} />
                         <ProductFormDialog
                           storeId={id!}
                           mode="edit"
@@ -463,7 +485,7 @@ function ProductFormDialog({
 }: {
   storeId: string;
   mode: "create" | "edit";
-  product?: { id: string; name: string; description: string; price: number; imageUrl: string; source: string };
+  product?: { id: string; name: string; description: string; price: number; imageUrl: string; source: string; category?: string };
   trigger?: React.ReactNode;
 }) {
   const queryClient = useQueryClient();
@@ -476,6 +498,7 @@ function ProductFormDialog({
     price: product?.price ?? 19.99,
     imageUrl: product?.imageUrl ?? "",
     source: (product?.source as ProductSource) ?? "manual",
+    category: product?.category ?? "",
   });
 
   useEffect(() => {
@@ -486,6 +509,7 @@ function ProductFormDialog({
         price: product.price,
         imageUrl: product.imageUrl,
         source: product.source as ProductSource,
+        category: product.category ?? "",
       });
     }
   }, [open, product]);
@@ -554,6 +578,10 @@ function ProductFormDialog({
               </div>
             </div>
             <div className="space-y-2">
+              <label className="text-sm font-medium">Category (optional)</label>
+              <Input placeholder="e.g. Apparel, Beauty, Home" value={data.category} onChange={(e) => setData((p) => ({ ...p, category: e.target.value }))} />
+            </div>
+            <div className="space-y-2">
               <label className="text-sm font-medium">Image URL (optional)</label>
               <Input placeholder="Leave blank for auto-generated image" value={data.imageUrl} onChange={(e) => setData((p) => ({ ...p, imageUrl: e.target.value }))} />
             </div>
@@ -567,6 +595,33 @@ function ProductFormDialog({
         </form>
       </DialogContent>
     </Dialog>
+  );
+}
+
+// ---------- Improve Product Button ----------
+function ImproveProductButton({ storeId, productId }: { storeId: string; productId: string }) {
+  const queryClient = useQueryClient();
+  const improve = useImproveProduct();
+  return (
+    <Button
+      variant="ghost"
+      size="sm"
+      className="flex-1"
+      disabled={improve.isPending}
+      onClick={async () => {
+        try {
+          await improve.mutateAsync({ productId });
+          queryClient.invalidateQueries({ queryKey: getListStoreProductsQueryKey(storeId) });
+          toast.success("Description improved");
+        } catch {
+          toast.error("Failed to improve");
+        }
+      }}
+      data-testid={`button-improve-${productId}`}
+    >
+      <Sparkles className={`h-3 w-3 mr-1 ${improve.isPending ? "animate-pulse" : ""}`} />
+      Improve
+    </Button>
   );
 }
 
@@ -642,14 +697,37 @@ function MarketingTab({ storeId, language }: { storeId: string; language: LangCo
     }
   };
 
+  const handleDownloadPack = async () => {
+    try {
+      const md = await getMarketingPack(storeId);
+      const blob = new Blob([md], { type: "text/markdown;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `marketing-pack-${storeId}.md`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      toast.success("Marketing pack downloaded");
+    } catch {
+      toast.error("Generate at least one asset first");
+    }
+  };
+
   return (
     <>
       <Card>
-        <CardHeader>
-          <CardTitle>AI Marketing Engine</CardTitle>
-          <CardDescription>
-            Generate ready-to-publish marketing in {LANG_LABELS[language]}.
-          </CardDescription>
+        <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0">
+          <div>
+            <CardTitle>AI Marketing Engine</CardTitle>
+            <CardDescription>
+              Generate ready-to-publish marketing in {LANG_LABELS[language]}.
+            </CardDescription>
+          </div>
+          <Button variant="outline" size="sm" onClick={handleDownloadPack} disabled={!assets || assets.length === 0} data-testid="button-download-pack">
+            <Download className="h-4 w-4 mr-2" /> Download Pack (.md)
+          </Button>
         </CardHeader>
         <CardContent className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {(Object.keys(MARKETING_META) as MarketingType[]).map((t) => {
@@ -800,35 +878,44 @@ function DropshippingTab({ storeId }: { storeId: string }) {
         </div>
       ) : data && data.items.length > 0 ? (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {data.items.map((it, i) => (
-            <Card key={i} className="flex flex-col">
-              <CardHeader className="pb-2">
-                <div className="flex items-start justify-between gap-2">
-                  <CardTitle className="text-base line-clamp-2">{it.name}</CardTitle>
-                  <Badge variant="secondary" className="capitalize shrink-0">{it.platform}</Badge>
-                </div>
-                <CardDescription className="line-clamp-3 mt-1">{it.description}</CardDescription>
-              </CardHeader>
-              <CardContent className="flex-1 flex flex-col justify-end space-y-3 pt-0">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="font-bold text-base">${it.estimatedPrice.toFixed(2)}</span>
-                  <span className="flex items-center gap-1 text-muted-foreground">
-                    <TrendingUp className="h-3 w-3" /> Trend {it.trendScore}
-                  </span>
-                </div>
-                <div className="flex gap-2">
-                  <Button size="sm" className="flex-1" onClick={() => handleImport(it)} disabled={create.isPending}>
-                    <ShoppingCart className="h-3 w-3 mr-1" /> Import
-                  </Button>
-                  <Button size="sm" variant="outline" asChild>
-                    <a href={it.platformUrl} target="_blank" rel="noopener noreferrer">
-                      <ExternalLink className="h-3 w-3" />
-                    </a>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+          {data.items.map((it, i) => {
+            const cost = +(it.estimatedPrice * 0.4).toFixed(2);
+            const margin = +(it.estimatedPrice - cost).toFixed(2);
+            const marginPct = Math.round((margin / it.estimatedPrice) * 100);
+            return (
+              <Card key={i} className="flex flex-col">
+                <CardHeader className="pb-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <CardTitle className="text-base line-clamp-2">{it.name}</CardTitle>
+                    <Badge variant="secondary" className="capitalize shrink-0">{it.platform}</Badge>
+                  </div>
+                  <CardDescription className="line-clamp-3 mt-1">{it.description}</CardDescription>
+                </CardHeader>
+                <CardContent className="flex-1 flex flex-col justify-end space-y-3 pt-0">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="font-bold text-base">${it.estimatedPrice.toFixed(2)}</span>
+                    <span className="flex items-center gap-1 text-muted-foreground">
+                      <TrendingUp className="h-3 w-3" /> Trend {it.trendScore}
+                    </span>
+                  </div>
+                  <div className="rounded-md bg-muted/50 p-2 text-xs space-y-0.5">
+                    <div className="flex justify-between"><span className="text-muted-foreground">Est. cost</span><span>${cost.toFixed(2)}</span></div>
+                    <div className="flex justify-between font-medium"><span className="text-muted-foreground">Profit / unit</span><span className="text-green-600">${margin.toFixed(2)} ({marginPct}%)</span></div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button size="sm" className="flex-1" onClick={() => handleImport(it)} disabled={create.isPending}>
+                      <ShoppingCart className="h-3 w-3 mr-1" /> Import
+                    </Button>
+                    <Button size="sm" variant="outline" asChild>
+                      <a href={it.platformUrl} target="_blank" rel="noopener noreferrer">
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       ) : (
         <Card className="flex flex-col items-center justify-center p-12 text-center">
