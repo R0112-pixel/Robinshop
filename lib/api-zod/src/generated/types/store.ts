@@ -12,6 +12,7 @@ export interface Store {
   name: string;
   niche: string;
   description: string;
+  language: string;
   tagline: string;
   themeName: string;
   themeStyle: string;

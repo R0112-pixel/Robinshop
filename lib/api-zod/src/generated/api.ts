@@ -23,6 +23,7 @@ export const ListStoresResponseItem = zod.object({
   name: zod.string(),
   niche: zod.string(),
   description: zod.string(),
+  language: zod.string(),
   tagline: zod.string(),
   themeName: zod.string(),
   themeStyle: zod.string(),
@@ -44,6 +45,7 @@ export const CreateStoreBody = zod.object({
   name: zod.string().min(1),
   niche: zod.string().min(1),
   description: zod.string(),
+  language: zod.enum(["en", "fr", "es", "ar", "sw"]).optional(),
 });
 
 /**
@@ -61,6 +63,7 @@ export const GetDashboardSummaryResponse = zod.object({
       name: zod.string(),
       niche: zod.string(),
       description: zod.string(),
+      language: zod.string(),
       tagline: zod.string(),
       themeName: zod.string(),
       themeStyle: zod.string(),
@@ -81,6 +84,7 @@ export const GetDashboardSummaryResponse = zod.object({
       description: zod.string(),
       price: zod.number(),
       imageUrl: zod.string(),
+      source: zod.string(),
       views: zod.number(),
       createdAt: zod.coerce.date(),
     }),
@@ -97,6 +101,7 @@ export const GetStoreResponse = zod.object({
   name: zod.string(),
   niche: zod.string(),
   description: zod.string(),
+  language: zod.string(),
   tagline: zod.string(),
   themeName: zod.string(),
   themeStyle: zod.string(),
@@ -117,6 +122,7 @@ export const UpdateStoreBody = zod.object({
   name: zod.string().optional(),
   niche: zod.string().optional(),
   description: zod.string().optional(),
+  language: zod.enum(["en", "fr", "es", "ar", "sw"]).optional(),
   tagline: zod.string().optional(),
   themeName: zod.string().optional(),
   themeStyle: zod.string().optional(),
@@ -132,6 +138,7 @@ export const UpdateStoreResponse = zod.object({
   name: zod.string(),
   niche: zod.string(),
   description: zod.string(),
+  language: zod.string(),
   tagline: zod.string(),
   themeName: zod.string(),
   themeStyle: zod.string(),
@@ -167,12 +174,28 @@ export const ListStoreProductsResponseItem = zod.object({
   description: zod.string(),
   price: zod.number(),
   imageUrl: zod.string(),
+  source: zod.string(),
   views: zod.number(),
   createdAt: zod.coerce.date(),
 });
 export const ListStoreProductsResponse = zod.array(
   ListStoreProductsResponseItem,
 );
+
+/**
+ * @summary Manually create a product in a store
+ */
+export const CreateProductParams = zod.object({
+  id: zod.coerce.string(),
+});
+
+export const CreateProductBody = zod.object({
+  name: zod.string().min(1),
+  description: zod.string(),
+  price: zod.number(),
+  imageUrl: zod.string().optional(),
+  source: zod.enum(["ai", "manual", "dropship"]).optional(),
+});
 
 /**
  * @summary Regenerate AI products for a store
@@ -188,6 +211,7 @@ export const RegenerateStoreProductsResponseItem = zod.object({
   description: zod.string(),
   price: zod.number(),
   imageUrl: zod.string(),
+  source: zod.string(),
   views: zod.number(),
   createdAt: zod.coerce.date(),
 });
@@ -206,8 +230,37 @@ export const GetProductResponse = zod.object({
   description: zod.string(),
   price: zod.number(),
   imageUrl: zod.string(),
+  source: zod.string(),
   views: zod.number(),
   createdAt: zod.coerce.date(),
+});
+
+export const UpdateProductParams = zod.object({
+  productId: zod.coerce.string(),
+});
+
+export const UpdateProductBody = zod.object({
+  name: zod.string().optional(),
+  description: zod.string().optional(),
+  price: zod.number().optional(),
+  imageUrl: zod.string().optional(),
+  source: zod.enum(["ai", "manual", "dropship"]).optional(),
+});
+
+export const UpdateProductResponse = zod.object({
+  id: zod.string(),
+  storeId: zod.string(),
+  name: zod.string(),
+  description: zod.string(),
+  price: zod.number(),
+  imageUrl: zod.string(),
+  source: zod.string(),
+  views: zod.number(),
+  createdAt: zod.coerce.date(),
+});
+
+export const DeleteProductParams = zod.object({
+  productId: zod.coerce.string(),
 });
 
 export const TrackProductViewParams = zod.object({
@@ -216,6 +269,61 @@ export const TrackProductViewParams = zod.object({
 
 export const TrackProductViewResponse = zod.object({
   count: zod.number(),
+});
+
+export const ListMarketingAssetsParams = zod.object({
+  id: zod.coerce.string(),
+});
+
+export const ListMarketingAssetsResponseItem = zod.object({
+  id: zod.string(),
+  storeId: zod.string(),
+  type: zod.string(),
+  title: zod.string(),
+  content: zod.string(),
+  language: zod.string(),
+  createdAt: zod.coerce.date(),
+});
+export const ListMarketingAssetsResponse = zod.array(
+  ListMarketingAssetsResponseItem,
+);
+
+/**
+ * @summary Generate AI marketing content for a store
+ */
+export const GenerateMarketingAssetParams = zod.object({
+  id: zod.coerce.string(),
+});
+
+export const GenerateMarketingAssetBody = zod.object({
+  type: zod.enum(["tiktok", "instagram", "email", "seo"]),
+});
+
+export const DeleteMarketingAssetParams = zod.object({
+  assetId: zod.coerce.string(),
+});
+
+export const GetDropshipSuggestionsParams = zod.object({
+  id: zod.coerce.string(),
+});
+
+export const GetDropshipSuggestionsQueryParams = zod.object({
+  region: zod.coerce.string().optional(),
+});
+
+export const GetDropshipSuggestionsResponse = zod.object({
+  region: zod.string(),
+  platforms: zod.array(zod.string()),
+  items: zod.array(
+    zod.object({
+      name: zod.string(),
+      description: zod.string(),
+      estimatedPrice: zod.number(),
+      trendScore: zod.number(),
+      platform: zod.string(),
+      platformUrl: zod.string(),
+    }),
+  ),
 });
 
 /**
@@ -232,6 +340,7 @@ export const GetPublicStoreResponse = zod.object({
     name: zod.string(),
     niche: zod.string(),
     description: zod.string(),
+    language: zod.string(),
     tagline: zod.string(),
     themeName: zod.string(),
     themeStyle: zod.string(),
@@ -251,6 +360,7 @@ export const GetPublicStoreResponse = zod.object({
       description: zod.string(),
       price: zod.number(),
       imageUrl: zod.string(),
+      source: zod.string(),
       views: zod.number(),
       createdAt: zod.coerce.date(),
     }),

@@ -5,13 +5,13 @@
  * RobinShop AI API
  * OpenAPI spec version: 0.1.0
  */
-import type { LanguageCode } from "./languageCode";
+import type { ProductSource } from "./productSource";
 
-export interface CreateStoreInput {
+export interface CreateProductInput {
   /** @minLength 1 */
   name: string;
-  /** @minLength 1 */
-  niche: string;
   description: string;
-  language?: LanguageCode;
+  price: number;
+  imageUrl?: string;
+  source?: ProductSource;
 }

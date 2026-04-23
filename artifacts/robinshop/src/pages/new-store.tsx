@@ -20,9 +20,18 @@ export default function NewStorePage() {
   const [name, setName] = useState("");
   const [niche, setNiche] = useState("");
   const [description, setDescription] = useState("");
+  const [language, setLanguage] = useState("en");
 
   const niches = [
     "Fashion", "Tech", "Beauty", "Fitness", "Home", "Food", "Pets", "Wellness", "Other"
+  ];
+
+  const languages: Array<{ code: "en" | "fr" | "es" | "ar" | "sw"; label: string }> = [
+    { code: "en", label: "English" },
+    { code: "fr", label: "French" },
+    { code: "es", label: "Spanish" },
+    { code: "ar", label: "Arabic" },
+    { code: "sw", label: "Swahili" },
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -34,7 +43,7 @@ export default function NewStorePage() {
 
     try {
       const store = await createStore.mutateAsync({
-        data: { name, niche, description }
+        data: { name, niche, description, language: language as "en" | "fr" | "es" | "ar" | "sw" }
       });
       
       queryClient.invalidateQueries({ queryKey: getListStoresQueryKey() });
@@ -105,6 +114,21 @@ export default function NewStorePage() {
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Store Language</label>
+                  <Select value={language} onValueChange={setLanguage}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {languages.map((l) => (
+                        <SelectItem key={l.code} value={l.code}>{l.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">All AI-generated content (branding, products, marketing) will be written in this language.</p>
                 </div>
 
                 <div className="space-y-2">

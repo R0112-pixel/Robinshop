@@ -5,11 +5,13 @@
  * RobinShop AI API
  * OpenAPI spec version: 0.1.0
  */
+import type { LanguageCode } from "./languageCode";
 
 export interface UpdateStoreInput {
   name?: string;
   niche?: string;
   description?: string;
+  language?: LanguageCode;
   tagline?: string;
   themeName?: string;
   themeStyle?: string;

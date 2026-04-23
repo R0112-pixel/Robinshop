@@ -10,7 +10,8 @@ import {
   TrackStoreVisitParams,
 } from "@workspace/api-zod";
 import { requireAuth, type AuthedRequest } from "../lib/auth";
-import { generateStoreContent } from "../lib/ai";
+import { generateStoreContent, type LanguageCode, SUPPORTED_LANGUAGES } from "../lib/ai";
+import { aiRateLimit } from "../middlewares/rateLimit";
 import {
   serializeStore,
   serializeProduct,
@@ -90,11 +91,21 @@ router.get("/stores/dashboard-summary", requireAuth, async (req, res) => {
   });
 });
 
-router.post("/stores", requireAuth, async (req, res) => {
+router.post("/stores", requireAuth, aiRateLimit, async (req, res) => {
   const userId = (req as AuthedRequest).userId;
   const body = CreateStoreBody.parse(req.body);
+  const language: LanguageCode = SUPPORTED_LANGUAGES.includes(
+    (body.language ?? "en") as LanguageCode,
+  )
+    ? ((body.language ?? "en") as LanguageCode)
+    : "en";
 
-  const ai = await generateStoreContent(body.name, body.niche, body.description);
+  const ai = await generateStoreContent(
+    body.name,
+    body.niche,
+    body.description,
+    language,
+  );
 
   const baseSlug = slugify(body.name);
   let slug = baseSlug;
@@ -116,6 +127,7 @@ router.post("/stores", requireAuth, async (req, res) => {
       name: body.name,
       niche: body.niche,
       description: body.description,
+      language,
       tagline: ai.tagline,
       themeName: ai.themeName,
       themeStyle: ai.themeStyle,
@@ -179,6 +191,7 @@ router.patch("/stores/:id", requireAuth, async (req, res) => {
       ...(body.name !== undefined && { name: body.name }),
       ...(body.niche !== undefined && { niche: body.niche }),
       ...(body.description !== undefined && { description: body.description }),
+      ...(body.language !== undefined && { language: body.language }),
       ...(body.tagline !== undefined && { tagline: body.tagline }),
       ...(body.themeName !== undefined && { themeName: body.themeName }),
       ...(body.themeStyle !== undefined && { themeStyle: body.themeStyle }),

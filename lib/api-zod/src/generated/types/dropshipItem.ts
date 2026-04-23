@@ -6,14 +6,11 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface Product {
-  id: string;
-  storeId: string;
+export interface DropshipItem {
   name: string;
   description: string;
-  price: number;
-  imageUrl: string;
-  source: string;
-  views: number;
-  createdAt: Date;
+  estimatedPrice: number;
+  trendScore: number;
+  platform: string;
+  platformUrl: string;
 }

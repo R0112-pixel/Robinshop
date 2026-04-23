@@ -1,0 +1,159 @@
+Build a full-stack SaaS application called “RobinShop AI”.
+
+This is NOT a simple website builder. It is a Shopify-level AI commerce platform that generates online stores, AI products, marketing systems, and supports manual product management and dropshipping simulation.
+
+The system must be secure, scalable, and production-ready in architecture design (MVP implementation allowed).
+
+TECH STACK
+Frontend: React (or Next.js)
+Backend: Node.js + Express
+Database: PostgreSQL or SQLite
+AI: OpenAI API (or mock AI fallback)
+CORE FEATURES
+1. Authentication System (SECURE)
+User signup, login, logout
+Password hashing (bcrypt)
+JWT authentication
+Protected routes (middleware-based)
+2. STORE CREATION SYSTEM
+
+Users can:
+
+Create AI-generated stores
+Or manually configure stores
+
+Each store includes:
+
+name
+niche
+language
+branding
+3. PRODUCT SYSTEM (HYBRID)
+AI-generated products (5–10 per store)
+Manual product creation/editing
+Product fields:
+name
+description
+price
+image
+source (AI/manual/dropship)
+4. AI ENGINE
+
+Must generate:
+
+store branding
+product ideas
+sales descriptions
+marketing content
+5. DROPSHIPPING SYSTEM (SIMULATION LAYER)
+AI suggests trending products
+Mock integration layer for:
+Amazon
+eBay
+Jumia (region-based availability logic)
+
+System must detect user region and only show supported platforms (mock logic acceptable).
+
+6. AI MARKETING ENGINE
+
+Generate:
+
+TikTok ad scripts (viral format)
+Instagram captions + hashtags
+Email marketing sequences
+SEO blog content
+7. MULTI-LANGUAGE SUPPORT
+
+Users can select language:
+
+English
+French
+Spanish
+Arabic
+Swahili
+
+All generated content must adapt to selected language.
+
+8. ADMIN DASHBOARD
+
+Each store includes:
+
+product management (AI + manual)
+marketing assets
+store preview
+analytics (views, clicks)
+SECURITY ARCHITECTURE (VERY IMPORTANT)
+1. API SECURITY
+JWT authentication middleware on all protected routes
+Input validation on all endpoints (prevent injection attacks)
+Rate limiting (basic protection against spam requests)
+2. PASSWORD SECURITY
+bcrypt hashing for all passwords
+Never store plain text passwords
+3. ACCESS CONTROL
+Users can only access their own stores
+Store ownership validation on every request
+4. DATA SECURITY (APPLICATION LEVEL)
+Validate all user inputs
+Sanitize product and store content
+Prevent unauthorized data access between users
+5. BASIC FIREWALL LOGIC (APPLICATION LEVEL SIMULATION)
+Block repeated failed login attempts
+Rate limit API abuse
+Detect suspicious request patterns (simple rules)
+
+NOTE: Real firewall protection is handled at deployment level (e.g., Cloudflare), not inside code.
+
+6. ERROR HANDLING SECURITY
+Do not expose internal server errors to frontend
+Use generic error messages for security
+DATABASE MODELS
+Users
+id
+email
+password_hash
+language
+Stores
+id
+user_id
+name
+niche
+language
+Products
+id
+store_id
+name
+description
+price
+image_url
+source
+MarketingAssets
+id
+store_id
+type (tiktok, instagram, email, seo)
+content
+UI REQUIREMENTS
+Shopify-style admin dashboard
+Sidebar navigation
+Clean SaaS UI
+Mobile responsive
+IMPORTANT RULE
+
+DO NOT implement payment systems yet.
+Focus only on:
+
+store creation
+product system
+AI generation
+marketing system
+security layer
+GOAL
+
+Build a secure, scalable MVP of an AI commerce platform that:
+
+generates stores
+supports manual + AI products
+generates marketing content (TikTok, Instagram, Email, SEO)
+supports multiple languages
+enforces user-level data security
+is architected like Shopify-level SaaS

@@ -7,6 +7,7 @@ export const storesTable = pgTable("stores", {
   name: text("name").notNull(),
   niche: text("niche").notNull(),
   description: text("description").notNull(),
+  language: text("language").notNull().default("en"),
   tagline: text("tagline").notNull().default(""),
   themeName: text("theme_name").notNull().default(""),
   themeStyle: text("theme_style").notNull().default(""),

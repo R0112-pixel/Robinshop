@@ -7,10 +7,20 @@
  */
 
 export * from "./counterResponse";
+export * from "./createProductInput";
 export * from "./createStoreInput";
 export * from "./dashboardSummary";
+export * from "./dropshipItem";
+export * from "./dropshipResponse";
+export * from "./generateMarketingAssetInput";
+export * from "./getDropshipSuggestionsParams";
 export * from "./healthStatus";
+export * from "./languageCode";
+export * from "./marketingAsset";
+export * from "./marketingType";
 export * from "./product";
+export * from "./productSource";
 export * from "./publicStorePayload";
 export * from "./store";
+export * from "./updateProductInput";
 export * from "./updateStoreInput";

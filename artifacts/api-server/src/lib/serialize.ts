@@ -1,4 +1,4 @@
-import type { ProductRow, StoreRow } from "@workspace/db";
+import type { ProductRow, StoreRow, MarketingAssetRow } from "@workspace/db";
 
 export function serializeStore(row: StoreRow, productCount: number) {
   return {
@@ -7,6 +7,7 @@ export function serializeStore(row: StoreRow, productCount: number) {
     name: row.name,
     niche: row.niche,
     description: row.description,
+    language: row.language,
     tagline: row.tagline,
     themeName: row.themeName,
     themeStyle: row.themeStyle,
@@ -28,7 +29,20 @@ export function serializeProduct(row: ProductRow) {
     description: row.description,
     price: Number(row.price),
     imageUrl: row.imageUrl,
+    source: row.source,
     views: row.views,
+    createdAt: row.createdAt.toISOString(),
+  };
+}
+
+export function serializeMarketingAsset(row: MarketingAssetRow) {
+  return {
+    id: row.id,
+    storeId: row.storeId,
+    type: row.type,
+    title: row.title,
+    content: row.content,
+    language: row.language,
     createdAt: row.createdAt.toISOString(),
   };
 }

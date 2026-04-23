@@ -6,14 +6,12 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface Product {
+export interface MarketingAsset {
   id: string;
   storeId: string;
-  name: string;
-  description: string;
-  price: number;
-  imageUrl: string;
-  source: string;
-  views: number;
+  type: string;
+  title: string;
+  content: string;
+  language: string;
   createdAt: Date;
 }

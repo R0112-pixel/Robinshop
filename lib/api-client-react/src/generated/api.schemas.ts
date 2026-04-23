@@ -9,18 +9,47 @@ export interface HealthStatus {
   status: string;
 }
 
+export type LanguageCode = (typeof LanguageCode)[keyof typeof LanguageCode];
+
+export const LanguageCode = {
+  en: "en",
+  fr: "fr",
+  es: "es",
+  ar: "ar",
+  sw: "sw",
+} as const;
+
+export type MarketingType = (typeof MarketingType)[keyof typeof MarketingType];
+
+export const MarketingType = {
+  tiktok: "tiktok",
+  instagram: "instagram",
+  email: "email",
+  seo: "seo",
+} as const;
+
+export type ProductSource = (typeof ProductSource)[keyof typeof ProductSource];
+
+export const ProductSource = {
+  ai: "ai",
+  manual: "manual",
+  dropship: "dropship",
+} as const;
+
 export interface CreateStoreInput {
   /** @minLength 1 */
   name: string;
   /** @minLength 1 */
   niche: string;
   description: string;
+  language?: LanguageCode;
 }
 
 export interface UpdateStoreInput {
   name?: string;
   niche?: string;
   description?: string;
+  language?: LanguageCode;
   tagline?: string;
   themeName?: string;
   themeStyle?: string;
@@ -36,6 +65,7 @@ export interface Store {
   name: string;
   niche: string;
   description: string;
+  language: string;
   tagline: string;
   themeName: string;
   themeStyle: string;
@@ -55,8 +85,55 @@ export interface Product {
   description: string;
   price: number;
   imageUrl: string;
+  source: string;
   views: number;
   createdAt: string;
+}
+
+export interface CreateProductInput {
+  /** @minLength 1 */
+  name: string;
+  description: string;
+  price: number;
+  imageUrl?: string;
+  source?: ProductSource;
+}
+
+export interface UpdateProductInput {
+  name?: string;
+  description?: string;
+  price?: number;
+  imageUrl?: string;
+  source?: ProductSource;
+}
+
+export interface MarketingAsset {
+  id: string;
+  storeId: string;
+  type: string;
+  title: string;
+  content: string;
+  language: string;
+  createdAt: string;
+}
+
+export interface GenerateMarketingAssetInput {
+  type: MarketingType;
+}
+
+export interface DropshipItem {
+  name: string;
+  description: string;
+  estimatedPrice: number;
+  trendScore: number;
+  platform: string;
+  platformUrl: string;
+}
+
+export interface DropshipResponse {
+  region: string;
+  platforms: string[];
+  items: DropshipItem[];
 }
 
 export interface CounterResponse {
@@ -76,3 +153,7 @@ export interface PublicStorePayload {
   store: Store;
   products: Product[];
 }
+
+export type GetDropshipSuggestionsParams = {
+  region?: string;
+};
