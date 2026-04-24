@@ -25,6 +25,7 @@ import type {
   GenerateMarketingAssetInput,
   GetDropshipSuggestionsParams,
   HealthStatus,
+  ImportFromUrlInput,
   MarketingAsset,
   Product,
   PublicStorePayload,
@@ -1727,6 +1728,93 @@ export const useDeleteMarketingAsset = <
   TContext
 > => {
   return useMutation(getDeleteMarketingAssetMutationOptions(options));
+};
+
+/**
+ * @summary Import an affiliate product from an Amazon/AliExpress/eBay URL
+ */
+export const getImportProductFromUrlUrl = (id: string) => {
+  return `/api/stores/${id}/import-from-url`;
+};
+
+export const importProductFromUrl = async (
+  id: string,
+  importFromUrlInput: ImportFromUrlInput,
+  options?: RequestInit,
+): Promise<Product> => {
+  return customFetch<Product>(getImportProductFromUrlUrl(id), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(importFromUrlInput),
+  });
+};
+
+export const getImportProductFromUrlMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof importProductFromUrl>>,
+    TError,
+    { id: string; data: BodyType<ImportFromUrlInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof importProductFromUrl>>,
+  TError,
+  { id: string; data: BodyType<ImportFromUrlInput> },
+  TContext
+> => {
+  const mutationKey = ["importProductFromUrl"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof importProductFromUrl>>,
+    { id: string; data: BodyType<ImportFromUrlInput> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return importProductFromUrl(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ImportProductFromUrlMutationResult = NonNullable<
+  Awaited<ReturnType<typeof importProductFromUrl>>
+>;
+export type ImportProductFromUrlMutationBody = BodyType<ImportFromUrlInput>;
+export type ImportProductFromUrlMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Import an affiliate product from an Amazon/AliExpress/eBay URL
+ */
+export const useImportProductFromUrl = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof importProductFromUrl>>,
+    TError,
+    { id: string; data: BodyType<ImportFromUrlInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof importProductFromUrl>>,
+  TError,
+  { id: string; data: BodyType<ImportFromUrlInput> },
+  TContext
+> => {
+  return useMutation(getImportProductFromUrlMutationOptions(options));
 };
 
 export const getGetDropshipSuggestionsUrl = (

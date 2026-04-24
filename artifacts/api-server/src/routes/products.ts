@@ -13,9 +13,17 @@ import {
   TrackProductViewParams,
   TrackProductClickParams,
   ImproveProductParams,
+  ImportProductFromUrlParams,
+  ImportProductFromUrlBody,
 } from "@workspace/api-zod";
 import { requireAuth, type AuthedRequest } from "../lib/auth";
 import { generateProductsOnly, improveProductCopy, type LanguageCode } from "../lib/ai";
+import {
+  extractProductId,
+  buildAffiliateUrl,
+  fetchProductData,
+  type AffiliateSource,
+} from "../lib/affiliate";
 import { aiRateLimit } from "../middlewares/rateLimit";
 import { serializeProduct, productImageUrl } from "../lib/serialize";
 
@@ -244,6 +252,85 @@ router.post("/products/:productId/click", async (req, res) => {
   }
   res.json({ count: updated.clicks });
 });
+
+router.post(
+  "/stores/:id/import-from-url",
+  requireAuth,
+  aiRateLimit,
+  async (req, res) => {
+    const userId = (req as AuthedRequest).userId;
+    const { id } = ImportProductFromUrlParams.parse(req.params);
+    const body = ImportProductFromUrlBody.parse(req.body);
+    const source = body.source as AffiliateSource;
+
+    const store = await ownStore(userId, id);
+    if (!store) {
+      res.status(404).json({ error: "Not found" });
+      return;
+    }
+
+    const productId = extractProductId(body.productUrl, source);
+    if (!productId) {
+      res
+        .status(400)
+        .json({ error: "Could not extract a product ID from that URL." });
+      return;
+    }
+
+    const fetched = await fetchProductData(productId, source);
+
+    let title = fetched?.title?.trim() || "";
+    let description = fetched?.description?.trim() || "";
+    let image = fetched?.image?.trim() || "";
+    let price = fetched?.price && fetched.price > 0 ? fetched.price : 0;
+
+    if (!title || !description || price <= 0) {
+      const draft = {
+        name: title || `${store.niche} ${source} pick`,
+        description:
+          description || `Trending ${source} item curated for ${store.name}.`,
+        price: price || 19.99,
+        category: "imported",
+      };
+      try {
+        const ai = await improveProductCopy(
+          draft,
+          { name: store.name, niche: store.niche },
+          store.language as LanguageCode,
+        );
+        if (!description) description = ai.description;
+        if (!title) title = draft.name;
+      } catch {
+        if (!description) description = draft.description;
+        if (!title) title = draft.name;
+      }
+      if (price <= 0) price = 24.99;
+    }
+
+    if (!image) {
+      image = productImageUrl(`${store.slug}-${source}-${productId}`, 0);
+    }
+
+    const affiliateUrl = buildAffiliateUrl(productId, source, userId);
+
+    const [inserted] = await db
+      .insert(productsTable)
+      .values({
+        storeId: store.id,
+        name: title,
+        description,
+        price: price.toFixed(2),
+        imageUrl: image,
+        source: "dropship",
+        category: source,
+        affiliateUrl,
+        affiliateSource: source,
+      })
+      .returning();
+
+    res.status(201).json(serializeProduct(inserted));
+  },
+);
 
 router.post("/products/:productId/view", async (req, res) => {
   const { productId } = TrackProductViewParams.parse(req.params);

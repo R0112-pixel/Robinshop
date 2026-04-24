@@ -87,10 +87,27 @@ export interface Product {
   imageUrl: string;
   source: string;
   category: string;
+  affiliateUrl: string;
+  affiliateSource: string;
   conversionScore: number;
   views: number;
   clicks: number;
   createdAt: string;
+}
+
+export type AffiliateSource =
+  (typeof AffiliateSource)[keyof typeof AffiliateSource];
+
+export const AffiliateSource = {
+  amazon: "amazon",
+  aliexpress: "aliexpress",
+  ebay: "ebay",
+} as const;
+
+export interface ImportFromUrlInput {
+  /** @minLength 4 */
+  productUrl: string;
+  source: AffiliateSource;
 }
 
 export interface CreateProductInput {

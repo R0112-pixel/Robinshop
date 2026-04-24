@@ -15,6 +15,8 @@ export interface Product {
   imageUrl: string;
   source: string;
   category: string;
+  affiliateUrl: string;
+  affiliateSource: string;
   conversionScore: number;
   views: number;
   clicks: number;

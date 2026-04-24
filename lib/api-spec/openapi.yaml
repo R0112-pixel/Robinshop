@@ -371,6 +371,30 @@ paths:
         "204":
           description: Deleted
 
+  /stores/{id}/import-from-url:
+    post:
+      operationId: importProductFromUrl
+      tags: [products]
+      summary: Import an affiliate product from an Amazon/AliExpress/eBay URL
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ImportFromUrlInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+
   /stores/{id}/dropshipping:
     get:
       operationId: getDropshipSuggestions
@@ -488,11 +512,25 @@ components:
         imageUrl: { type: string }
         source: { type: string }
         category: { type: string }
+        affiliateUrl: { type: string }
+        affiliateSource: { type: string }
         conversionScore: { type: integer }
         views: { type: integer }
         clicks: { type: integer }
         createdAt: { type: string, format: date-time }
-      required: [id, storeId, name, description, price, imageUrl, source, category, conversionScore, views, clicks, createdAt]
+      required: [id, storeId, name, description, price, imageUrl, source, category, affiliateUrl, affiliateSource, conversionScore, views, clicks, createdAt]
+
+    AffiliateSource:
+      type: string
+      enum: [amazon, aliexpress, ebay]
+
+    ImportFromUrlInput:
+      type: object
+      properties:
+        productUrl: { type: string, minLength: 4 }
+        source:
+          $ref: "#/components/schemas/AffiliateSource"
+      required: [productUrl, source]
 
     CreateProductInput:
       type: object

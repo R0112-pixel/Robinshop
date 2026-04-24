@@ -1,0 +1,326 @@
+Step 1 — Database Schema First
+Add this to your Drizzle schema in @workspace/db:
+typescript// schema.ts
+import { pgTable, text, timestamp, uuid, decimal, boolean } from "drizzle-orm/pg-core";
+
+export const affiliateProducts = pgTable("affiliate_products", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  storeId: uuid("store_id").notNull(),
+  userId: text("user_id").notNull(), // Clerk user ID
+  
+  // Product Data
+  title: text("title").notNull(),
+  description: text("description"),
+  image: text("image_url"),
+  originalPrice: decimal("original_price"),
+  
+  // Affiliate Data
+  affiliateLink: text("affiliate_link").notNull(),
+  affiliateSource: text("affiliate_source").notNull(), // "amazon" | "aliexpress" | "ebay"
+  externalProductId: text("external_product_id"), // ASIN for amazon
+  commissionRate: decimal("commission_rate"), // e.g. 0.05 = 5%
+  
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const affiliateStats = pgTable("affiliate_stats", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: text("user_id").notNull(),
+  productId: uuid("product_id").notNull(),
+  clicks: text("clicks").default("0"),
+  conversions: text("conversions").default("0"),
+  totalEarned: decimal("total_earned").default("0"),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+Step 2 — Backend Route
+Add this to your Express server:
+typescript// routes/affiliate.ts
+import { Router } from "express";
+import { db } from "@workspace/db";
+import { affiliateProducts } from "@workspace/db/schema";
+import { z } from "zod";
+
+const router = Router();
+
+// Free APIs - no cost
+const AFFILIATE_SOURCES = {
+  aliexpress: {
+    baseUrl: "https://api.aliexpress.com/v1",
+    affiliateBase: "https://s.click.aliexpress.com/e/",
+    commissionRate: 0.07, // 7%
+  },
+  amazon: {
+    baseUrl: "https://webservices.amazon.com",
+    affiliateBase: "https://www.amazon.com/dp/",
+    commissionRate: 0.05, // 5%
+  }
+};
+
+const importSchema = z.object({
+  storeId: z.string().uuid(),
+  productUrl: z.string().url(),
+  source: z.enum(["amazon", "aliexpress", "ebay"]),
+});
+
+router.post("/import", async (req, res) => {
+  try {
+    const { storeId, productUrl, source } = importSchema.parse(req.body);
+    const userId = req.auth?.userId; // Clerk auth
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    // Extract product ID from URL
+    const productId = extractProductId(productUrl, source);
+    
+    if (!productId) {
+      return res.status(400).json({ 
+        error: "Could not extract product ID from URL" 
+      });
+    }
+
+    // Build affiliate link
+    const affiliateLink = buildAffiliateLink(productId, source, userId);
+
+    // Fetch product data
+    const productData = await fetchProductData(productId, source);
+
+    // Save to database
+    const [savedProduct] = await db
+      .insert(affiliateProducts)
+      .values({
+        storeId,
+        userId,
+        title: productData.title,
+        description: productData.description,
+        image: productData.image,
+        originalPrice: productData.price,
+        affiliateLink,
+        affiliateSource: source,
+        externalProductId: productId,
+        commissionRate: AFFILIATE_SOURCES[source].commissionRate.toString(),
+      })
+      .returning();
+
+    res.json({ 
+      success: true, 
+      product: savedProduct,
+      message: "Product imported. You are now an affiliate for this product."
+    });
+
+  } catch (error) {
+    console.error("Import error:", error);
+    res.status(500).json({ error: "Import failed" });
+  }
+});
+
+// Extract product ID from URL
+function extractProductId(url: string, source: string): string | null {
+  try {
+    if (source === "amazon") {
+      // Extract ASIN from Amazon URL
+      const match = url.match(/\/dp\/([A-Z0-9]{10})/);
+      return match ? match[1] : null;
+    }
+    
+    if (source === "aliexpress") {
+      // Extract item ID from AliExpress URL
+      const match = url.match(/item\/(\d+)/);
+      return match ? match[1] : null;
+    }
+
+    if (source === "ebay") {
+      // Extract item ID from eBay URL
+      const match = url.match(/itm\/(\d+)/);
+      return match ? match[1] : null;
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+// Build affiliate link with your tracking ID
+function buildAffiliateLink(
+  productId: string, 
+  source: string, 
+  userId: string
+): string {
+  if (source === "amazon") {
+    // Replace YOUR_ASSOCIATE_TAG with your Amazon Associates tag
+    return `https://www.amazon.com/dp/${productId}?tag=YOUR_ASSOCIATE_TAG&ref=robinshop_${userId}`;
+  }
+  
+  if (source === "aliexpress") {
+    return `https://www.aliexpress.com/item/${productId}.html?aff_id=YOUR_ALIEXPRESS_ID&user_id=${userId}`;
+  }
+
+  if (source === "ebay") {
+    return `https://www.ebay.com/itm/${productId}?mkcid=1&mkrid=YOUR_EBAY_CAMPAIGN&userId=${userId}`;
+  }
+
+  return "";
+}
+
+// Fetch basic product data
+async function fetchProductData(productId: string, source: string) {
+  // For now use OpenAI to generate product description
+  // Later replace with real API calls
+  
+  if (source === "amazon") {
+    // Use RapidAPI free tier for Amazon data
+    const response = await fetch(
+      `https://real-time-amazon-data.p.rapidapi.com/product-details?asin=${productId}&country=US`,
+      {
+        headers: {
+          "X-RapidAPI-Key": process.env.RAPIDAPI_KEY || "",
+          "X-RapidAPI-Host": "real-time-amazon-data.p.rapidapi.com",
+        },
+      }
+    );
+    const data = await response.json();
+    return {
+      title: data.data?.product_title || "Product",
+      description: data.data?.product_description || "",
+      image: data.data?.product_main_image_url || "",
+      price: data.data?.product_price || "0",
+    };
+  }
+
+  // Fallback - return basic structure
+  return {
+    title: "Imported Product",
+    description: "Product imported via affiliate program",
+    image: "",
+    price: "0",
+  };
+}
+
+export default router;
+
+Step 3 — Frontend Import Button
+typescript// components/ImportButton.tsx
+import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { 
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger 
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { toast } from "sonner";
+import { Download } from "lucide-react";
+
+interface ImportButtonProps {
+  storeId: string;
+}
+
+export function ImportButton({ storeId }: ImportButtonProps) {
+  const [url, setUrl] = useState("");
+  const [source, setSource] = useState<"amazon" | "aliexpress" | "ebay">("amazon");
+  const [open, setOpen] = useState(false);
+  const queryClient = useQueryClient();
+
+  const importMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch("/api/affiliate/import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ storeId, productUrl: url, source }),
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Import failed");
+      }
+      
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast.success("Product imported! You are now earning affiliate commission.");
+      queryClient.invalidateQueries({ queryKey: ["products", storeId] });
+      setUrl("");
+      setOpen(false);
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button className="gap-2">
+          <Download size={16} />
+          Import Product
+        </Button>
+      </DialogTrigger>
+
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Import Affiliate Product</DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4 pt-2">
+          {/* Source selector */}
+          <Select 
+            value={source} 
+            onValueChange={(v) => setSource(v as typeof source)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select source" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="amazon">Amazon</SelectItem>
+              <SelectItem value="aliexpress">AliExpress</SelectItem>
+              <SelectItem value="ebay">eBay</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Product URL */}
+          <Input
+            placeholder="Paste product URL here..."
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+          />
+
+          {/* Info box */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800">
+            💰 You will earn affiliate commission every time someone 
+            buys through your store link.
+          </div>
+
+          {/* Import button */}
+          <Button
+            className="w-full"
+            onClick={() => importMutation.mutate()}
+            disabled={!url || importMutation.isPending}
+          >
+            {importMutation.isPending ? "Importing..." : "Import & Become Affiliate"}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+Step 4 — Register The Route
+In your main Express app file:
+typescript// app.ts or server.ts
+import affiliateRouter from "./routes/affiliate";
+
+app.use("/api/affiliate", affiliateRouter);

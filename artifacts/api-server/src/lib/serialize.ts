@@ -31,6 +31,8 @@ export function serializeProduct(row: ProductRow) {
     imageUrl: row.imageUrl,
     source: row.source,
     category: row.category,
+    affiliateUrl: row.affiliateUrl,
+    affiliateSource: row.affiliateSource,
     conversionScore: row.conversionScore,
     views: row.views,
     clicks: row.clicks,

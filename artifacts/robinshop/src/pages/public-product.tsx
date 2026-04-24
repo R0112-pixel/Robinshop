@@ -7,7 +7,8 @@ import {
   useTrackProductClick,
 } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ShoppingCart, Check } from "lucide-react";
+import { ArrowLeft, ShoppingCart, Check, ExternalLink } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { StoreHeader } from "@/components/store-header";
@@ -44,6 +45,12 @@ export default function PublicProductPage() {
   }
 
   const inCart = cart.items.some((i) => i.productId === product.id);
+  const isAffiliate = !!product.affiliateUrl && product.affiliateUrl.length > 0;
+
+  const handleAffiliateBuy = () => {
+    trackClick.mutate({ productId: product.id });
+    window.open(product.affiliateUrl, "_blank", "noopener,noreferrer");
+  };
 
   const handleAddToCart = () => {
     cart.add({
@@ -103,9 +110,16 @@ export default function PublicProductPage() {
             className="space-y-8"
           >
             <div>
-              {product.category && (
-                <div className="text-sm uppercase tracking-wider text-muted-foreground mb-2">{product.category}</div>
-              )}
+              <div className="flex flex-wrap items-center gap-2 mb-2">
+                {product.category && (
+                  <span className="text-sm uppercase tracking-wider text-muted-foreground">{product.category}</span>
+                )}
+                {isAffiliate && (
+                  <Badge variant="outline" className="capitalize gap-1">
+                    Ships from {product.affiliateSource}
+                  </Badge>
+                )}
+              </div>
               <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">{product.name}</h1>
               <div className="text-3xl font-medium" style={{ color: 'var(--store-primary)' }}>
                 ${product.price.toFixed(2)}
@@ -117,35 +131,55 @@ export default function PublicProductPage() {
             </div>
 
             <div className="pt-6 border-t space-y-3">
-              <Button
-                size="lg"
-                className="w-full h-14 text-lg text-white shadow-lg"
-                style={{ backgroundColor: 'var(--store-primary)' }}
-                onClick={handleBuyNow}
-                data-testid="button-buy-now"
-              >
-                Buy Now
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="w-full h-14 text-lg"
-                onClick={handleAddToCart}
-                data-testid="button-add-to-cart"
-              >
-                {inCart ? (
-                  <>
-                    <Check className="mr-2 h-5 w-5" /> Added — Add Another
-                  </>
-                ) : (
-                  <>
-                    <ShoppingCart className="mr-2 h-5 w-5" /> Add to Cart
-                  </>
-                )}
-              </Button>
-              <p className="text-center text-sm text-muted-foreground mt-2">
-                Secure checkout powered by RobinShop
-              </p>
+              {isAffiliate ? (
+                <>
+                  <Button
+                    size="lg"
+                    className="w-full h-14 text-lg text-white shadow-lg"
+                    style={{ backgroundColor: 'var(--store-primary)' }}
+                    onClick={handleAffiliateBuy}
+                    data-testid="button-buy-affiliate"
+                  >
+                    Buy on {product.affiliateSource}
+                    <ExternalLink className="ml-2 h-5 w-5" />
+                  </Button>
+                  <p className="text-center text-xs text-muted-foreground">
+                    You'll be redirected to {product.affiliateSource} to complete your purchase.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <Button
+                    size="lg"
+                    className="w-full h-14 text-lg text-white shadow-lg"
+                    style={{ backgroundColor: 'var(--store-primary)' }}
+                    onClick={handleBuyNow}
+                    data-testid="button-buy-now"
+                  >
+                    Buy Now
+                  </Button>
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="w-full h-14 text-lg"
+                    onClick={handleAddToCart}
+                    data-testid="button-add-to-cart"
+                  >
+                    {inCart ? (
+                      <>
+                        <Check className="mr-2 h-5 w-5" /> Added — Add Another
+                      </>
+                    ) : (
+                      <>
+                        <ShoppingCart className="mr-2 h-5 w-5" /> Add to Cart
+                      </>
+                    )}
+                  </Button>
+                  <p className="text-center text-sm text-muted-foreground mt-2">
+                    Secure checkout powered by RobinShop
+                  </p>
+                </>
+              )}
             </div>
           </motion.div>
         </div>

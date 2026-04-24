@@ -12,6 +12,8 @@ export const productsTable = pgTable("products", {
   imageUrl: text("image_url").notNull().default(""),
   source: text("source").notNull().default("ai"),
   category: text("category").notNull().default(""),
+  affiliateUrl: text("affiliate_url").notNull().default(""),
+  affiliateSource: text("affiliate_source").notNull().default(""),
   conversionScore: integer("conversion_score").notNull().default(0),
   views: integer("views").notNull().default(0),
   clicks: integer("clicks").notNull().default(0),

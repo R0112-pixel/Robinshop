@@ -86,6 +86,8 @@ export const GetDashboardSummaryResponse = zod.object({
       imageUrl: zod.string(),
       source: zod.string(),
       category: zod.string(),
+      affiliateUrl: zod.string(),
+      affiliateSource: zod.string(),
       conversionScore: zod.number(),
       views: zod.number(),
       clicks: zod.number(),
@@ -179,6 +181,8 @@ export const ListStoreProductsResponseItem = zod.object({
   imageUrl: zod.string(),
   source: zod.string(),
   category: zod.string(),
+  affiliateUrl: zod.string(),
+  affiliateSource: zod.string(),
   conversionScore: zod.number(),
   views: zod.number(),
   clicks: zod.number(),
@@ -220,6 +224,8 @@ export const RegenerateStoreProductsResponseItem = zod.object({
   imageUrl: zod.string(),
   source: zod.string(),
   category: zod.string(),
+  affiliateUrl: zod.string(),
+  affiliateSource: zod.string(),
   conversionScore: zod.number(),
   views: zod.number(),
   clicks: zod.number(),
@@ -242,6 +248,8 @@ export const GetProductResponse = zod.object({
   imageUrl: zod.string(),
   source: zod.string(),
   category: zod.string(),
+  affiliateUrl: zod.string(),
+  affiliateSource: zod.string(),
   conversionScore: zod.number(),
   views: zod.number(),
   clicks: zod.number(),
@@ -270,6 +278,8 @@ export const UpdateProductResponse = zod.object({
   imageUrl: zod.string(),
   source: zod.string(),
   category: zod.string(),
+  affiliateUrl: zod.string(),
+  affiliateSource: zod.string(),
   conversionScore: zod.number(),
   views: zod.number(),
   clicks: zod.number(),
@@ -296,6 +306,8 @@ export const ImproveProductResponse = zod.object({
   imageUrl: zod.string(),
   source: zod.string(),
   category: zod.string(),
+  affiliateUrl: zod.string(),
+  affiliateSource: zod.string(),
   conversionScore: zod.number(),
   views: zod.number(),
   clicks: zod.number(),
@@ -357,6 +369,20 @@ export const DeleteMarketingAssetParams = zod.object({
   assetId: zod.coerce.string(),
 });
 
+/**
+ * @summary Import an affiliate product from an Amazon/AliExpress/eBay URL
+ */
+export const ImportProductFromUrlParams = zod.object({
+  id: zod.coerce.string(),
+});
+
+export const importProductFromUrlBodyProductUrlMin = 4;
+
+export const ImportProductFromUrlBody = zod.object({
+  productUrl: zod.string().min(importProductFromUrlBodyProductUrlMin),
+  source: zod.enum(["amazon", "aliexpress", "ebay"]),
+});
+
 export const GetDropshipSuggestionsParams = zod.object({
   id: zod.coerce.string(),
 });
@@ -416,6 +442,8 @@ export const GetPublicStoreResponse = zod.object({
       imageUrl: zod.string(),
       source: zod.string(),
       category: zod.string(),
+      affiliateUrl: zod.string(),
+      affiliateSource: zod.string(),
       conversionScore: zod.number(),
       views: zod.number(),
       clicks: zod.number(),

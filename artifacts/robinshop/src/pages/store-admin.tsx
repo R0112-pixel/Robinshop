@@ -20,6 +20,7 @@ import {
   getGetDashboardSummaryQueryKey,
   useImproveProduct,
   getMarketingPack,
+  useImportProductFromUrl,
 } from "@workspace/api-client-react";
 import { useParams, Link, useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
@@ -55,6 +56,7 @@ import {
   Eye, ExternalLink, LayoutTemplate, Copy, RefreshCw, Trash2,
   Activity, Package, Plus, Pencil, Sparkles, Globe, ShoppingCart,
   TrendingUp, Mail, Music2, Hash, FileText, Download, MousePointerClick,
+  Link2, DollarSign,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
@@ -598,6 +600,109 @@ function ProductFormDialog({
   );
 }
 
+// ---------- Import From URL Dialog ----------
+type AffiliateSource = "amazon" | "aliexpress" | "ebay";
+
+const AFFILIATE_HINTS: Record<AffiliateSource, { label: string; placeholder: string }> = {
+  amazon: {
+    label: "Amazon",
+    placeholder: "https://www.amazon.com/dp/B0XXXXXXXX",
+  },
+  aliexpress: {
+    label: "AliExpress",
+    placeholder: "https://www.aliexpress.com/item/1005006XXXXXX.html",
+  },
+  ebay: {
+    label: "eBay",
+    placeholder: "https://www.ebay.com/itm/123456789012",
+  },
+};
+
+function ImportFromUrlDialog({ storeId }: { storeId: string }) {
+  const queryClient = useQueryClient();
+  const importUrl = useImportProductFromUrl();
+  const [open, setOpen] = useState(false);
+  const [url, setUrl] = useState("");
+  const [source, setSource] = useState<AffiliateSource>("amazon");
+
+  const handleImport = async () => {
+    try {
+      await importUrl.mutateAsync({
+        id: storeId,
+        data: { productUrl: url, source },
+      });
+      queryClient.invalidateQueries({ queryKey: getListStoreProductsQueryKey(storeId) });
+      queryClient.invalidateQueries({ queryKey: getGetStoreQueryKey(storeId) });
+      toast.success("Imported! You're now an affiliate for this product.");
+      setUrl("");
+      setOpen(false);
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.error ??
+        err?.message ??
+        "Could not import that URL.";
+      toast.error(msg);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="default" data-testid="button-open-import-url">
+          <Link2 className="h-4 w-4 mr-2" /> Import from URL
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Import Affiliate Product</DialogTitle>
+          <DialogDescription>
+            Paste a product link and we'll add it to your store with your affiliate tag attached.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4 py-2">
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Source</label>
+            <Select value={source} onValueChange={(v) => setSource(v as AffiliateSource)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="amazon">Amazon</SelectItem>
+                <SelectItem value="aliexpress">AliExpress</SelectItem>
+                <SelectItem value="ebay">eBay</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Product URL</label>
+            <Input
+              placeholder={AFFILIATE_HINTS[source].placeholder}
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              data-testid="input-import-url"
+            />
+          </div>
+          <div className="rounded-md bg-primary/5 border border-primary/20 p-3 text-sm flex gap-2">
+            <DollarSign className="h-4 w-4 mt-0.5 shrink-0 text-primary" />
+            <span>
+              You'll earn affiliate commission whenever someone buys through your store.
+              Commission rates: Amazon ~5%, AliExpress ~7%, eBay ~4%.
+            </span>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
+          <Button
+            onClick={handleImport}
+            disabled={!url.trim() || importUrl.isPending}
+            data-testid="button-confirm-import-url"
+          >
+            {importUrl.isPending ? "Importing..." : "Import & Become Affiliate"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // ---------- Improve Product Button ----------
 function ImproveProductButton({ storeId, productId }: { storeId: string; productId: string }) {
   const queryClient = useQueryClient();
@@ -849,7 +954,8 @@ function DropshippingTab({ storeId }: { storeId: string }) {
                 AI-curated trending products. Region detected: <strong>{data?.region ?? "—"}</strong>. Available platforms: <strong>{data?.platforms?.join(", ") ?? "—"}</strong>.
               </CardDescription>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
+              <ImportFromUrlDialog storeId={storeId} />
               <Select value={region || "auto"} onValueChange={(v) => setRegion(v === "auto" ? "" : v)}>
                 <SelectTrigger className="w-40"><SelectValue placeholder="Region" /></SelectTrigger>
                 <SelectContent>
