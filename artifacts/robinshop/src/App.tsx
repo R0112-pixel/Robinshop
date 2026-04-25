@@ -3,6 +3,7 @@ import { ClerkProvider, SignIn, SignUp, Show, useClerk } from "@clerk/react";
 import { shadcn } from "@clerk/themes";
 import { Switch, Route, useLocation, Router as WouterRouter, Redirect } from "wouter";
 import { queryClient } from "./lib/queryClient";
+import { useApiAuthSetup } from "./lib/auth-setup";
 import { QueryClientProvider, useQueryClient } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -83,6 +84,11 @@ const clerkAppearance = {
     main: "p-6 sm:p-8",
   },
 };
+
+function ApiAuthSetup() {
+  useApiAuthSetup();
+  return null;
+}
 
 function ClerkQueryClientCacheInvalidator() {
   const { addListener } = useClerk();
@@ -167,6 +173,7 @@ function ClerkProviderWithRoutes() {
     >
       <QueryClientProvider client={queryClient}>
         <ClerkQueryClientCacheInvalidator />
+        <ApiAuthSetup />
         <TooltipProvider>
           <Router />
           <Toaster />
