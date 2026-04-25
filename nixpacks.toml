@@ -1,8 +1,11 @@
+[phases.setup]
+nixPkgs = ["nodejs_20", "pnpm-9_x", "openssl"]
+
 [phases.install]
 cmds = ["pnpm install --no-frozen-lockfile"]
 
 [phases.build]
-cmds = ["pnpm run build --filter !@workspace/mockup-sandbox"]
+cmds = ["pnpm --filter @workspace/api-server run build"]
 
 [start]
 cmd = "pnpm --filter @workspace/api-server start"
