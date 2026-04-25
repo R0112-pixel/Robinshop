@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 import { logger } from "./logger";
 
-const baseURL = process.env.AI_INTEGRATIONS_OPENAI_BASE_URL;
+const baseURL = process.env.AI_INTEGRATIONS_OPENAI_BASE_URL ?? "https://api.groq.com/openai/v1";
 const apiKey = process.env.AI_INTEGRATIONS_OPENAI_API_KEY;
 
 const openai =
@@ -104,7 +104,7 @@ Prices in USD between 9.99 and 299.99.`;
 
   try {
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "llama-3.1-8b-instant",
       max_completion_tokens: 4096,
       response_format: { type: "json_object" },
       messages: [
@@ -210,7 +210,7 @@ Write all output in ${langName}. Return STRICT JSON: { "title": "short label", "
 
   try {
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "llama-3.1-8b-instant",
       max_completion_tokens: 2048,
       response_format: { type: "json_object" },
       messages: [
@@ -283,7 +283,7 @@ Return STRICT JSON: { "description": "...", "conversionScore": 87 }`;
 
   try {
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "llama-3.1-8b-instant",
       max_completion_tokens: 600,
       response_format: { type: "json_object" },
       messages: [
@@ -399,7 +399,7 @@ Pick the most fitting platform from the allowed list for each item. trendScore i
 
   try {
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "llama-3.1-8b-instant",
       max_completion_tokens: 1500,
       response_format: { type: "json_object" },
       messages: [
