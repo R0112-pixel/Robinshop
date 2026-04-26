@@ -6,15 +6,20 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "wouter";
 import { Plus, Store as StoreIcon, Package, Eye, Activity, TrendingUp, MousePointerClick } from "lucide-react";
 import { motion } from "framer-motion";
+import { OnboardingBanner, WelcomeBanner } from "@/components/onboarding";
+import { useUser } from "@clerk/react";
 import { Badge } from "@/components/ui/badge";
 
 export default function DashboardPage() {
   const { data: summary, isLoading: isSummaryLoading } = useGetDashboardSummary();
   const { data: stores, isLoading: isStoresLoading } = useListStores();
+  const { user } = useUser();
 
   return (
     <AdminLayout>
       <div className="space-y-8">
+        <WelcomeBanner userName={user?.firstName ?? ""} />
+        <OnboardingBanner storeCount={stores?.length ?? 0} />
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
           <Link href="/stores/new">
