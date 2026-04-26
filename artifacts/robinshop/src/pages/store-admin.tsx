@@ -61,6 +61,13 @@ import {
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import { basePath } from "@/App";
+import {
+  SalesDashboard,
+  MarketingOverview,
+  ProductComparison,
+  FinanceDashboard,
+  TrendsDashboard,
+} from "@/pages/store-dashboards";
 
 type LangCode = "en" | "fr" | "es" | "ar" | "sw";
 type ProductSource = "ai" | "manual" | "dropship";
@@ -220,7 +227,7 @@ export default function StoreAdminPage() {
 
         <Tabs defaultValue="overview" className="w-full">
           <TabsList className="w-full justify-start border-b rounded-none h-auto p-0 bg-transparent mb-6 overflow-x-auto">
-            {["overview", "products", "marketing", "dropshipping", "edit", "preview"].map((t) => (
+            {["overview", "sales", "marketing-overview", "product-comparison", "finance", "trends", "products", "marketing", "dropshipping", "edit", "preview"].map((t) => (
               <TabsTrigger
                 key={t}
                 value={t}
@@ -449,6 +456,31 @@ export default function StoreAdminPage() {
                 </CardContent>
               </form>
             </Card>
+          </TabsContent>
+
+          {/* SALES */}
+          <TabsContent value="sales" className="space-y-6">
+            <SalesDashboard store={store} products={products ?? []} />
+          </TabsContent>
+
+          {/* MARKETING OVERVIEW */}
+          <TabsContent value="marketing-overview" className="space-y-6">
+            <MarketingOverview assets={[]} />
+          </TabsContent>
+
+          {/* PRODUCT COMPARISON */}
+          <TabsContent value="product-comparison" className="space-y-6">
+            <ProductComparison products={products ?? []} />
+          </TabsContent>
+
+          {/* FINANCE */}
+          <TabsContent value="finance" className="space-y-6">
+            <FinanceDashboard products={products ?? []} store={store} />
+          </TabsContent>
+
+          {/* TRENDS */}
+          <TabsContent value="trends" className="space-y-6">
+            <TrendsDashboard products={products ?? []} store={store} />
           </TabsContent>
 
           {/* PREVIEW */}
