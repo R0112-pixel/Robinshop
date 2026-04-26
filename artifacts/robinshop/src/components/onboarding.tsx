@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { isNewUser } from "@/lib/new-user";
+import { isNewUser } from "@/lib/new-user";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -50,7 +51,7 @@ const STEPS = [
 
 export function OnboardingBanner({ storeCount }: { storeCount: number }) {
   const [dismissed, setDismissed] = useState(
-    localStorage.getItem("onboarding-dismissed") === "true" || localStorage.getItem("onboarding-completed") === "true"
+    localStorage.getItem("onboarding-dismissed") === "true" || localStorage.getItem("onboarding-completed") === "true" || localStorage.getItem("onboarding-completed") === "true"
   );
   const [currentStep, setCurrentStep] = useState(0);
 
