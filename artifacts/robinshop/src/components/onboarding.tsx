@@ -194,3 +194,52 @@ export function WelcomeBanner({ userName }: { userName: string }) {
     </Card>
   );
 }
+
+export function WelcomeBackBanner({ userName, storeCount }: { userName: string; storeCount: number }) {
+  const [show, setShow] = useState(() => {
+    const last = localStorage.getItem("last-visit");
+    const now = Date.now();
+    localStorage.setItem("last-visit", now.toString());
+    if (!last) return false;
+    const hoursSince = (now - parseInt(last)) / (1000 * 60 * 60);
+    return hoursSince > 12; // Show if away for more than 12 hours
+  });
+
+  if (!show || storeCount === 0) return null;
+
+  return (
+    <Card className="border-emerald-200 bg-gradient-to-r from-emerald-50 to-background">
+      <CardContent className="p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center">
+              <TrendingUp className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <h3 className="font-bold">
+                Welcome back{userName ? `, ${userName}` : ""}! 👋
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                You have {storeCount} store{storeCount > 1 ? "s" : ""} running. Keep growing!
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Link href="/stores/new">
+              <Button size="sm" variant="outline">
+                <Plus className="h-3 w-3 mr-1" /> New Store
+              </Button>
+            </Link>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShow(false)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
