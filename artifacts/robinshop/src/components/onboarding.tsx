@@ -55,7 +55,7 @@ export function OnboardingBanner({ storeCount }: { storeCount: number }) {
   );
   const [currentStep, setCurrentStep] = useState(0);
 
-  if (dismissed || storeCount >= 3 || !isNewUser()) return null;
+  if (dismissed || !storeCount || storeCount >= 3 || !isNewUser()) return null;
 
   const completedSteps = storeCount > 0 ? 1 : 0;
 
@@ -205,7 +205,7 @@ export function WelcomeBackBanner({ userName, storeCount }: { userName: string; 
     return hoursSince > 12; // Show if away for more than 12 hours
   });
 
-  if (!show || storeCount === 0) return null;
+  if (!show || !storeCount || storeCount === 0) return null;
 
   return (
     <Card className="border-emerald-200 bg-gradient-to-r from-emerald-50 to-background">
